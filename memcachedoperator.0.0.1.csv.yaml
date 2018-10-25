@@ -5,7 +5,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   name: memcachedoperator.v0.0.1
-  namespace: default
+  namespace: memcached
 spec:
   install: 
     strategy: deployment
@@ -33,7 +33,7 @@ spec:
             spec:
               containers:
                 - name: sao
-                  image: docker.io/edwardxiao/memcached-operator:v0.0.1
+                  image: quay.io/jzelinskie/memcached-operator:v0.0.1
                   command: 
                   - /usr/local/bin/memcached-operator
                   ports:
