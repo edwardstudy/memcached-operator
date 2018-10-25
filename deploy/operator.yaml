@@ -15,7 +15,7 @@ spec:
       serviceAccountName: memcached-operator
       containers:
         - name: memcached-operator
-          image: REPLACE_IMAGE
+          image: docker.io/edwardxiao/memcached-operator:v0.0.1
           ports:
           - containerPort: 60000
             name: metrics
