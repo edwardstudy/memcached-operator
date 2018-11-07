@@ -6,7 +6,7 @@ set -o pipefail
 
 vendor/k8s.io/code-generator/generate-groups.sh \
 deepcopy \
-github.com/example-inc/memcached-operator/pkg/generated \
-github.com/example-inc/memcached-operator/pkg/apis \
+github.com/edwardstudy/memcached-operator/pkg/generated \
+github.com/edwardstudy/memcached-operator/pkg/apis \
 cache:v1alpha1 \
 --go-header-file "./tmp/codegen/boilerplate.go.txt"

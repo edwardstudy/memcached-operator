@@ -3,7 +3,7 @@ package stub
 import (
 	"context"
 
-	"github.com/example-inc/memcached-operator/pkg/apis/cache/v1alpha1"
+	"github.com/edwardstudy/memcached-operator/pkg/apis/cache/v1alpha1"
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"

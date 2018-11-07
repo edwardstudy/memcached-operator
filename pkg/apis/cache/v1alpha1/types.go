@@ -21,6 +21,10 @@ type Memcached struct {
 	Status            MemcachedStatus `json:"status,omitempty"`
 }
 
+// After modifying the *_types.go file always run the following command to update the generated code for that resource type:
+//
+// $ operator-sdk generate k8s
+
 type MemcachedSpec struct {
 	// Size is the size of the memcached deployment
 	Size int32 `json:"size"`
