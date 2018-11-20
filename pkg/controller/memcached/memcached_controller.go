@@ -3,12 +3,14 @@ package memcached
 import (
 	"context"
 	"log"
+	"reflect"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,7 +99,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		log.Printf("Failed to get Memcached: %v", err)
+		log.Printf("Failed to get Memcached: %v\n", err)
 		return reconcile.Result{}, err
 	}
 
@@ -134,9 +136,25 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{Requeue: true, RequeueAfter: 3 * time.Second}, err
 	}
 
-	// TODO: Update the Memcached status with the pod names
-
-	// TODO: Update status.Nodes if needed
+	// Update the Memcached status with the pod names
+	podList := &corev1.PodList{}
+	labelSelector := labels.SelectorFromSet(labelsForMemcached(instance.Name))
+	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
+	err = r.client.List(context.TODO(), listOps, podList)
+	if err != nil {
+		log.Printf("Failed to list pods: %v\n", err)
+		return reconcile.Result{}, err
+	}
+	podNames := getPodNames(podList.Items)
+	// Update status.Nodes if needed
+	if !reflect.DeepEqual(podNames, instance.Status.Nodes) {
+		instance.Status.Nodes = podNames
+		err := r.client.Update(context.TODO(), instance)
+		if err != nil {
+			log.Printf("Failed to update memcached status: %v\n", err)
+			return reconcile.Result{}, err
+		}
+	}
 
 	return reconcile.Result{}, nil
 }
@@ -186,4 +204,13 @@ func (r *ReconcileMemcached) deploymentForMemcached(m *cachev1alpha1.Memcached) 
 // belonging to the given memcached CR name.
 func labelsForMemcached(name string) map[string]string {
 	return map[string]string{"app": "memcached", "memcached_cr": name}
+}
+
+// getPodNames returns the pod names of the array of pods passed in
+func getPodNames(pods []corev1.Pod) []string {
+	var podNames []string
+	for _, pod := range pods {
+		podNames = append(podNames, pod.Name)
+	}
+	return podNames
 }
