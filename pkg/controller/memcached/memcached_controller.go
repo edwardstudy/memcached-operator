@@ -2,12 +2,15 @@ package memcached
 
 import (
 	"context"
+	"log"
+	"time"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -16,7 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	cachev1alpha1 "github.com/edwardstudy/memcached-operator/pkg/apis/cache/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 /**
@@ -112,15 +114,29 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 		// Deployment created successfully - return and requeue
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{Requeue: true, RequeueAfter: 3 * time.Second}, nil
 	} else if err != nil {
 		log.Printf("Failed to get Deployment: %v\n", err)
 		return reconcile.Result{}, err
 	}
 
 	// Ensure the deployment size is the same as the spec
+	size := instance.Spec.Size
+	if *found.Spec.Replicas != size {
+		found.Spec.Replicas = &size
 
-	// Update the Memcached status with the pod names
+		err = r.client.Update(context.TODO(), found)
+		if err != nil {
+			log.Printf("Failed to get Deployment: %v\n", err)
+			return reconcile.Result{}, err
+		}
+		log.Printf("Updated the Deployment: %s/%s\n", found.Namespace, found.Name)
+		return reconcile.Result{Requeue: true, RequeueAfter: 3 * time.Second}, err
+	}
+
+	// TODO: Update the Memcached status with the pod names
+
+	// TODO: Update status.Nodes if needed
 
 	return reconcile.Result{}, nil
 }
