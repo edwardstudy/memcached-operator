@@ -28,6 +28,10 @@ import (
 * business logic.  Delete these comments after modifying this file.*
  */
 
+const (
+	imageSpec = "memcached:1.4.36-alpine"
+)
+
 // Add creates a new Memcached Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
@@ -124,8 +128,13 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// Ensure the deployment size is the same as the spec
 	size := instance.Spec.Size
-	if *found.Spec.Replicas != size {
+	if *found.Spec.Replicas != size || found.Spec.Template.Spec.Containers[0].Image != imageSpec {
 		found.Spec.Replicas = &size
+		length := len(found.Spec.Template.Spec.Containers)
+
+		for i := 1; i <= length; i++ {
+			found.Spec.Template.Spec.Containers[i].Image = imageSpec
+		}
 
 		err = r.client.Update(context.TODO(), found)
 		if err != nil {
@@ -184,7 +193,7 @@ func (r *ReconcileMemcached) deploymentForMemcached(m *cachev1alpha1.Memcached) 
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Image:   "memcached:1.4.36-alpine",
+						Image:   imageSpec,
 						Name:    "memcached",
 						Command: []string{"memcached", "-m=64", "-o", "modern", "-v"},
 						Ports: []corev1.ContainerPort{{
