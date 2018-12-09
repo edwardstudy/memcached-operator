@@ -2,10 +2,12 @@ package memcached
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
 
+	cachev1alpha1 "github.com/edwardstudy/memcached-operator/pkg/apis/cache/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -13,14 +15,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	kwatch "k8s.io/apimachinery/pkg/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	cachev1alpha1 "github.com/edwardstudy/memcached-operator/pkg/apis/cache/v1alpha1"
 )
 
 /**
@@ -222,4 +223,31 @@ func getPodNames(pods []corev1.Pod) []string {
 		podNames = append(podNames, pod.Name)
 	}
 	return podNames
+}
+
+type Event struct {
+	Type   kwatch.EventType
+	Object *cachev1alpha1.Memcached
+}
+
+
+func handleMemcachedEvent(event *Event) (bool, error) {
+	memcached := event.Object
+
+
+	if len(memcached.Status.Nodes) == 0 {
+		return false, fmt.Errorf("ignore failed memcahche (%s). Please delete its CR", memcached.Name)
+	}
+
+	switch event.Type {
+	case kwatch.Added:
+		// TODO create
+
+	case kwatch.Modified:
+		// TODO update
+
+	case kwatch.Deleted:
+		// TODO delete
+	}
+	return false, nil
 }
