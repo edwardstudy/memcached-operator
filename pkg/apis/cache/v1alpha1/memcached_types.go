@@ -18,6 +18,13 @@ type MemcachedSpec struct {
 type MemcachedStatus struct {
 	// Nodes are the names of the memcached pods
 	Nodes []string `json:"nodes"`
+	// Size is the current size of the cluster
+	Size int `json:"size"`
+	// CurrentVersion is the current cluster version
+	CurrentVersion string `json:"currentVersion"`
+	// TargetVersion is the version the cluster upgrading to.
+	// If the cluster is not upgrading, TargetVersion is empty.
+	TargetVersion string `json:"targetVersion"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
