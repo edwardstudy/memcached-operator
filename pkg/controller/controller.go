@@ -1,8 +1,19 @@
 package controller
 
 import (
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
+
+type Controller struct {
+	Config
+}
+
+type Config struct {
+	KubeCli    kubernetes.Interface
+	KubeExtCli apiextensionsclient.Interface
+}
 
 // AddToManagerFuncs is a list of functions to add all Controllers to the Manager
 var AddToManagerFuncs []func(manager.Manager) error
