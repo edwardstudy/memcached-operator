@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	kwatch "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -41,7 +42,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileMemcached{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileMemcached{client: mgr.GetClient(), scheme: mgr.GetScheme(),recorder:mgr.GetRecorder("Memcached")}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -78,8 +79,9 @@ type ReconcileMemcached struct {
 	// TODO: Clarify the split client
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client   client.Client
+	scheme   *runtime.Scheme
+	recorder record.EventRecorder
 }
 
 // Reconcile reads that state of the cluster for a Memcached object and makes changes based on the state read
@@ -121,6 +123,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 		// Deployment created successfully - return and requeue
+		r.recorder.Event(instance, corev1.EventTypeWarning, "Create Error", err.Error())
 		return reconcile.Result{Requeue: true, RequeueAfter: 3 * time.Second}, nil
 	} else if err != nil {
 		log.Printf("Failed to get Deployment: %v\n", err)
@@ -230,10 +233,8 @@ type Event struct {
 	Object *cachev1alpha1.Memcached
 }
 
-
 func handleMemcachedEvent(event *Event) (bool, error) {
 	memcached := event.Object
-
 
 	if len(memcached.Status.Nodes) == 0 {
 		return false, fmt.Errorf("ignore failed memcahche (%s). Please delete its CR", memcached.Name)
