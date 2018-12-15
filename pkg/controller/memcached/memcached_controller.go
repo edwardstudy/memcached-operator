@@ -143,6 +143,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 		err = r.client.Update(context.TODO(), found)
 		if err != nil {
 			log.Printf("Failed to get Deployment: %v\n", err)
+			r.recorder.Event(instance, corev1.EventTypeWarning, "Update Error", err.Error())
 			return reconcile.Result{}, err
 		}
 		log.Printf("Updated the Deployment: %s/%s\n", found.Namespace, found.Name)
@@ -156,6 +157,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 	err = r.client.List(context.TODO(), listOps, podList)
 	if err != nil {
 		log.Printf("Failed to list pods: %v\n", err)
+		r.recorder.Event(instance, corev1.EventTypeWarning, "Get Error", err.Error())
 		return reconcile.Result{}, err
 	}
 	podNames := getPodNames(podList.Items)
@@ -165,6 +167,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 		err := r.client.Update(context.TODO(), instance)
 		if err != nil {
 			log.Printf("Failed to update memcached status: %v\n", err)
+			r.recorder.Event(instance, corev1.EventTypeWarning, "Update Error", err.Error())
 			return reconcile.Result{}, err
 		}
 	}
