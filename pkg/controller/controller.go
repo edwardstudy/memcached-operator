@@ -4,6 +4,8 @@ import (
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/edwardstudy/memcached-operator/pkg/client/clientset/versioned"
 )
 
 type Controller struct {
@@ -11,8 +13,10 @@ type Controller struct {
 }
 
 type Config struct {
-	KubeCli    kubernetes.Interface
-	KubeExtCli apiextensionsclient.Interface
+	NameSpace      string
+	MemcachedCRCli versioned.Interface
+	KubeCli        kubernetes.Interface
+	KubeExtCli     apiextensionsclient.Interface
 }
 
 // AddToManagerFuncs is a list of functions to add all Controllers to the Manager
